@@ -1,5 +1,5 @@
 # DRI-HOP.py
-#  "Direct Relief Integration for higher optical performance"
+#  "Direct Relief Integration for Higher Optical Performance"
 
 # code to take a GeMS geodatabase (MUP feature class, DMU table) and a hillshaded DEM,
 # assume Symbol values in DMU table are for WPGCMYK, and that there is an extra column
@@ -7,7 +7,7 @@
 # and make an HSV stack with stretched and "bumped" VALs for specified units,
 # ready for display with the raster HSV function
 
-versionString = 'DRI-HOP.py, version of 28 March 2018'
+versionString = 'DRI-HOP.py, version of -5 June 2020'
 
 import arcpy, os.path, sys
 from arcpy.sa import *
@@ -46,14 +46,6 @@ def fieldNameList(aTable):
 
 ###################################
 
-gdb = 'C:/arcdata/scratch/BSLW.gdb'
-hillshade = 'D:/PnwLidar/2013Bellingham.gdb/bellingham_be_ne'
-
-stretch = 0.9 # factor by which we stretch the input hillshade, is floating point  
-newMean = 225 # mean value of new hillshade, needs be integer 0..255
-floor = 200   # smallest allowable brightness in new hillshade, needs be integer 0..255
-
-
 ## read inputs from ArcMap tool interface
 hillshade = sys.argv[1]
 gdb = sys.argv[2]
@@ -70,8 +62,6 @@ if sys.argv[8] == 'true':
     forceFailure = True
 else:
     forceFailure = False
-
-
 
 inDmu = gdb+'/DescriptionOfMapUnits'
 mup = gdb+'/GeologicMap/MapUnitPolys'
@@ -135,7 +125,9 @@ with arcpy.da.UpdateCursor(dmu, fields) as cursor:
         row[1] = int(rgb[0])
         row[2] = int(rgb[1])
         row[3] = int(rgb[2])
-        cursor.updateRow(row) 
+        cursor.updateRow(row)
+del cursor
+del row
 
 ##### make some grids
 ## Set environment
@@ -158,6 +150,7 @@ for attrib in ['Red','Green','Blue']:
 if ValBumpExists:
     addMsgAndPrint('Making ValBump raster')
     arcpy.FeatureToRaster_conversion('polylayer','DescriptionOfMapUnits.ValBump',scratch+'/ValBump')
+arcpy.RemoveJoin_management("polylayer")
 
 addMsgAndPrint('Calculating new hillshade')
 addMsgAndPrint('  turn hillshade nulls white')
@@ -165,7 +158,10 @@ newShade1 = Con(IsNull(hillshade),255,hillshade)
 newShade1.save(scratch+'/newshade1')
 # stretch and shift, add ValBump, +0.5 to turn Int into Round
 addMsgAndPrint('  stretch and shift hillshade')
-newShade2 = Int((newShade1 - mean) * stretch + newMean + Raster(scratch+'/ValBump') + 0.5)
+if ValBumpExists:
+    newShade2 = Int((newShade1 - mean) * stretch + newMean + Raster(scratch+'/ValBump') + 0.5)
+else:
+    newShade2 = Int((newShade1 - mean) * stretch + newMean + 0.5)
 newShade2.save(scratch+'/newshade2')
 testAndDelete(newShade1)
 addMsgAndPrint('  truncate newShade at upper limit = 255')
@@ -197,11 +193,9 @@ addMsgAndPrint('  saving newBlue')
 newBlue.save(scratch+'/newBlue')
 
 # make multiband RGB raster ( arcpy.CompositeBands_management)
-#testAndDelete(scratchDir+'/rgbComposite.tif')
 addMsgAndPrint('Compositing rasters')
 rasterName = os.path.basename(gdb)[:-4]+'_rgbComposite.png'
 testAndDelete(scratchDir+'/'+rasterName)
-#arcpy.CompositeBands_management([scratch+'/newRed',scratch+'/newGreen',scratch+'/newBlue'],scratch+'/rgbComposite')
 arcpy.CompositeBands_management([newRed,newGreen,newBlue],scratchDir+'/'+rasterName)
 
 arcpy.CheckInExtension("Spatial")
@@ -217,10 +211,13 @@ pgw.write('cellMultiplier = '+str(cellMultiplier)+'\n')
 pgw.close()    
 
 # delete intermediate stuff:
-for r in newGreen0, newRed0, newBlue0, newGreen1, newRed1, newBlue1, newRed, newGreen, newBlue, newShade4:
+arcpy.Compact_management(scratch)
+for r in newGreen0, newRed0, newBlue0, newGreen1, newRed1, newBlue1, newRed, newGreen, newBlue, newShade4,dmu:
     testAndDelete(r)
-
-
+for r in 'Blue','Green','Red','ValBump':
+    testAndDelete(scratch+'/'+r)
+addMsgAndPrint('Deleting '+scratch)
+testAndDelete(scratch)
 
 addMsgAndPrint("Done")
 if forceFailure:
