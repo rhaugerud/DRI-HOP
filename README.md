@@ -10,8 +10,8 @@ To install this toolbox:
 
 (1) Tap the big green "Clone or download" button at the right of the Github window. Select "Download ZIP".
 
-(2) Unzip the downloaded file (probably DRIHOP-master.zip). You should have a folder named DRIHOP-master. Place this folder someplace useful where you can find it.
+(2) Unzip the downloaded file (probably DRIHOP-master.zip). You should then have a folder named DRIHOP-master. Place this folder someplace useful where you can find it.
 
-(3) Open ArcMap, open the ArcToolbox window, right-click on an empty space within the ArcToolbox window, and Add Toolbox... Navigate to DRIHOP-master folder and select DRI-HOP.tbx.  
+(3) Open ArcMap, open the ArcToolbox window, right-click on an empty space within the ArcToolbox window, and Add Toolbox... Navigate to folder DRIHOP-master and select DRI-HOP.tbx.  
 
 This code is not subject to US Copyright.  
