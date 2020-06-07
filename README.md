@@ -8,7 +8,7 @@ The tool is designed to run off a GeMS-style map database (see https://ngmdb.usg
 
 To install this toolbox:
 
-(1) Tap the big green Clone or download button at the right of the Github window . Select Download ZIP.
+(1) Tap the big green "Clone or download" button at the right of the Github window. Select "Download ZIP".
 
 (2) Unzip the downloaded file (probably DRIHOP-master.zip). You should have a folder named DRIHOP-master. Place this folder someplace useful where you can find it.
 
